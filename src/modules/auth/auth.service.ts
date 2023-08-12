@@ -5,6 +5,7 @@ import * as bcryptjs from 'bcryptjs'
 import { User } from '../users/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt'
+import { Role } from './enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +22,7 @@ export class AuthService {
         const hashedPassword = await bcryptjs.hash(password, 10)
         const newUser = await this.usersService.create({ name, email, password: hashedPassword })
 
-        const payload = { name, email }
+        const payload = { id: newUser.id, name, email, role: Role.USER }
         const token = await this.jwtService.signAsync(payload)
 
         return { newUser, token }
@@ -34,7 +35,13 @@ export class AuthService {
         const isPasswordValid = await bcryptjs.compare(password, user.password)
         if (!isPasswordValid) throw new UnauthorizedException('Invalid password')
 
-        const payload = { name: user.name, email: user.email }
+        const payload = { id: user.id, name: user.name, email: user.email, role: user.role }
         return await this.jwtService.signAsync(payload)
+    }
+
+    async profile ({ id, email }: any): Promise<User> {
+        if (id) return await this.usersService.findOne(id)
+        else if (email) return await this.usersService.findOneByEmail(email)
+        else throw new BadRequestException('')
     }
 }

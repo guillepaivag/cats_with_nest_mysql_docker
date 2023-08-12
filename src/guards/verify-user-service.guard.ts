@@ -1,4 +1,4 @@
-import { Request } from 'express'
+import { Request as RequestExpress } from 'express'
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from 'src/constants';
@@ -9,8 +9,6 @@ export class VerifyUserServiceGuard implements CanActivate {
   
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
-    console.log(request.headers.authorization)
-    console.log(request.headers['x-auth-token'])
 
     const { clientType, token } = this.extractTokenFromHeader(request)
     if (!token) throw new UnauthorizedException()
@@ -19,7 +17,7 @@ export class VerifyUserServiceGuard implements CanActivate {
         const payload = await this.jwtService.verifyAsync(token, { secret: jwtConstants.secret })
         request.clientType = clientType
         request.token = token
-        clientType === 'user' ? request.user = payload : request.service = payload
+        clientType === 'user' ? request.userPayload = payload : request.servicePayload = payload
     } catch (error) {
       throw new UnauthorizedException()
     }
@@ -27,7 +25,7 @@ export class VerifyUserServiceGuard implements CanActivate {
     return true
   }
 
-  private extractTokenFromHeader(request: Request): { clientType: string, token: string } {
+  private extractTokenFromHeader(request: RequestExpress): { clientType: string, token: string } {
     const authorization = request.headers.authorization as string | undefined
     const x_auth_token = request.headers['x-auth-token'] as string | undefined
 
