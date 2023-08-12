@@ -11,11 +11,11 @@ export class User {
     @Column({ unique: true, nullable: false })
     email: string;
 
+    @Column({ default: "user" })
+    role: string;
+
     @Column({ nullable: false })
     password: string;
-
-    @Column({ default: "user" })
-    rol: string;
 
     @DeleteDateColumn()
     deletedAt: Date;
